@@ -12,6 +12,12 @@
     "vite-plugin-restart": "^0.4.1"
   },
   "dependencies": {
+    "gsap": "3.12",
     "three": "^0.166.1"
-  }
+  },
+  "description": "## Setup Download [Node.js](https://nodejs.org/en/download/). Run this followed commands:",
+  "main": "vite.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

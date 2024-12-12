@@ -1,0 +1,8 @@
+body { 
+    margin: 0; 
+    overflow: hidden;
+}
+canvas { 
+    display: block; 
+    pointer-events: auto; /* 確保 canvas 能接受滑鼠事件 */
+}
