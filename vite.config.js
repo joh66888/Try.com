@@ -21,9 +21,6 @@ export default {
             }
         }
     },
-    plugins: [
-        restart({ restart: ['../static/**'] }) // Restart server on static file change
-    ],
     optimizeDeps: {
         exclude: ['@esbuild/linux-x64']
     }
