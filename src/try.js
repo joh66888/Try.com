@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
+import { PMREMGenerator } from 'three/src/extras/PMREMGenerator.js';
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -31,18 +32,28 @@ const material = new THREE.MeshMatcapMaterial();
 material.matcap = metcapTexture;
 
 // Environment map
-console.log('Starting to load environment map...');
-const textureLoader = new THREE.TextureLoader();
+console.log('Starting to load HDR environment map...');
+const rgbeLoader = new RGBELoader();
+rgbeLoader.setDataType(THREE.HalfFloatType);
 
-textureLoader.load(
-    '/textures/environmentMap/universe3.png',
+// Create a new PMREMGenerator
+const pmremGenerator = new PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+
+// Load the HDR environment map
+rgbeLoader.load(
+    '/textures/environmentMap/universe2.hdr',
     function(texture) {
-        console.log('Environment map loaded, processing...');
+        console.log('HDR texture loaded, processing...');
         texture.mapping = THREE.EquirectangularReflectionMapping;
-        texture.colorSpace = THREE.SRGBColorSpace;
         
-        scene.background = texture;
-        scene.environment = texture;
+        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+        
+        scene.background = envMap;
+        scene.environment = envMap;
+        
+        texture.dispose();
+        pmremGenerator.dispose();
         
         console.log('Environment map setup complete');
     },
@@ -50,7 +61,7 @@ textureLoader.load(
         console.log(`Loading progress: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
     },
     function(error) {
-        console.error('Error loading environment map:', error);
+        console.error('Error loading HDR environment map:', error);
     }
 );
 
