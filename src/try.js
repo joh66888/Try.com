@@ -35,7 +35,7 @@ console.log('Starting to load environment map...');
 const textureLoader = new THREE.TextureLoader();
 
 textureLoader.load(
-    './textures/environmentMap/universe3.png',
+    '/textures/environmentMap/universe3.png',
     function(texture) {
         console.log('Environment map loaded, processing...');
         texture.mapping = THREE.EquirectangularReflectionMapping;
