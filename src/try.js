@@ -1,87 +1,150 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
+
+// scene
+const scene = new THREE.Scene();
+
+
+// Textures
+const textLoader = new THREE.TextureLoader();
+const metalColorTexture = textLoader.load('./textures/metal/metal.jpg');
+const metcapTexture = textLoader.load('./textures/matcaps/10.png');
+const gradientTexture = textLoader.load('./textures/gradients/3.jpg');
+
+metalColorTexture.colorSpace = THREE.SRGBColorSpace;
+metcapTexture.colorSpace = THREE.SRGBColorSpace;
+gradientTexture.colorSpace = THREE.SRGBColorSpace;
+
+// 設定材質
+const material = new THREE.MeshMatcapMaterial();
+material.matcap = metcapTexture;
+
+// Environment map
+const rgbeLoader = new RGBELoader()
+rgbeLoader.load('./textures/environmentMap/universe.hdr', (environmentMap) =>
+{
+    environmentMap.mapping = THREE.EquirectangularReflectionMapping
+
+    scene.background = environmentMap
+    scene.environment = environmentMap
+})
+
+
+// 設定太空船的參數
+const radius = 100;
+const spaceship_y = 0;
+const max_size = 15;
+
+// 設定太空艙的信息
+const length = 20, width = 8;
+
+const shape = new THREE.Shape();
+shape.moveTo(0, 0);
+shape.lineTo(0, width);
+shape.lineTo(length, width);
+shape.lineTo(length, 0);
+shape.lineTo(0, 0);
+
+const extrudeSettings = {
+    steps: 1,
+    depth: 30,
+    bevelEnabled: true,
+    bevelThickness: 4,
+    bevelSize: 2,
+    bevelOffset: -4,
+    bevelSegments: 1
+};
+const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+// 記錄上一次呼叫 updateCube 的時間
+let lastUpdateTime = 0;
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
-// Scene
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
 
 // Axes helper
-const axesHelper = new THREE.AxesHelper(100);
-scene.add(axesHelper);
+// const axesHelper = new THREE.AxesHelper(100000);
+// scene.add(axesHelper);
 
-// Camera
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 0, 6);
+// camera
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+camera.position.set(0, 200, 100)
 scene.add(camera);
 
-// OrbitControls
+// 創建控制器 -> smooth by enableDamping
 const controls = new OrbitControls(camera, canvas)
-// smooth movement
 controls.enableDamping = true
 
+// 創建渲染器
+const renderer = new THREE.WebGLRenderer({ canvas });
+renderer.setSize(window.innerWidth, window.innerHeight);
 
-// Group
+// 建立太空船陣列
 const spaceship = new THREE.Group();
+spaceship.position.set(0, spaceship_y, 0);
 scene.add(spaceship);
 
-// add cube
-const cube1 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0x30B030, wireframe: true })
-);
-spaceship.add(cube1);
+// Adjust canvas on resize
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
-const cube2 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0x2194CE, wireframe: true })
-);
-spaceship.add(cube2);
+function updateCubes(spaceship, radius) {
 
-const cube3 = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0xff3399, wireframe: true })
-);
-spaceship.add(cube3);
+    // 創建太空艙
+    const cube = new THREE.Mesh(geometry, material);
+    spaceship.add(cube);
 
-// Cube postion
-cube1.position.set(0, 0, 0);
-cube2.position.set(0, 1.5, 0);
-cube3.position.set(0, 3, 0);
+    // 分割圓形
+    const cubeCount = spaceship.children.length;
+    const angleDivide = (Math.PI * 2) / cubeCount;
 
+    // 分配座標
+    spaceship.children.forEach((cube, i) => {
+        const angle = i * angleDivide;
+        cube.position.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+        // 設定朝向太空船中心
+        cube.lookAt(0, spaceship_y, 0);
+    })
+    console.log("complete reset coordinate")
+}
 
-camera.lookAt(spaceship.position);
+const clock = new THREE.Clock()
 
-// Renderer
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
-})
-renderer.setSize(window.innerWidth, window.innerHeight)
-
-// Clock
-const clock = new THREE.Clock();
-
-// Animate 設定下一個frame要做什麼
 function animate() {
-
-    // Clock
-    const time = clock.getElapsedTime()
-
-    // Transform
-    spaceship.rotation.y = time;
-    cube1.rotation.y = time;
-    cube2.rotation.x = time;
-    cube3.rotation.z = time;
-
     // Update controls for smooth movement
-    controls.update();
+    controls.update()
 
-    // Render after transform
+    // Get elapsed time
+    const elapsedTime = clock.getElapsedTime();
+
+    // Update cubes at 0.3-second intervals
+    if (elapsedTime - lastUpdateTime >= 0.05 && spaceship.children.length < max_size) {
+        updateCubes(spaceship, radius);
+        lastUpdateTime = elapsedTime; // 更新上次執行時間
+    }
+
+    // Update each cube's rotation
+    spaceship.children.forEach((cube) => {
+        const rotationSpeed = cube.userData.rotationSpeed || 0.01; // 默認旋轉速度
+        cube.rotation.z += rotationSpeed; // 圓周旋轉
+    });
+
+    // Transform spaceship
+    const time = clock.getElapsedTime();
+    spaceship.rotation.y = time / 3;
+
+    console.log(time);
+
+    // Render
     renderer.render(scene, camera);
 
-    // Webbrowser will call this function 60 times per second
-    requestAnimationFrame(animate);
+    //Cascade calling next frame
+    requestAnimationFrame(animate)
 }
+
 animate();
