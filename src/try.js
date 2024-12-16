@@ -31,27 +31,18 @@ const material = new THREE.MeshMatcapMaterial();
 material.matcap = metcapTexture;
 
 // Environment map
-console.log('Starting to load HDR environment map...');
-const rgbeLoader = new RGBELoader();
+console.log('Starting to load environment map...');
+const textureLoader = new THREE.TextureLoader();
 
-// Create a new PMREMGenerator
-const pmremGenerator = new THREE.PMREMGenerator(renderer);
-pmremGenerator.compileEquirectangularShader();
-
-// Load the HDR environment map
-rgbeLoader.load(
-    './textures/environmentMap/universe.hdr',
+textureLoader.load(
+    './textures/environmentMap/universe3.png',
     function(texture) {
-        console.log('HDR texture loaded, processing...');
+        console.log('Environment map loaded, processing...');
         texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.SRGBColorSpace;
         
-        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-        
-        scene.background = envMap;
-        scene.environment = envMap;
-        
-        texture.dispose();
-        pmremGenerator.dispose();
+        scene.background = texture;
+        scene.environment = texture;
         
         console.log('Environment map setup complete');
     },
@@ -59,7 +50,7 @@ rgbeLoader.load(
         console.log(`Loading progress: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
     },
     function(error) {
-        console.error('Error loading HDR environment map:', error);
+        console.error('Error loading environment map:', error);
     }
 );
 
