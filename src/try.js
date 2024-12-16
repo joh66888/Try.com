@@ -42,7 +42,7 @@ pmremGenerator.compileEquirectangularShader();
 
 // Load the HDR environment map
 rgbeLoader.load(
-    '/textures/environmentMap/universe2.hdr',
+    '/textures/environmentMap/universe1.hdr',
     function(texture) {
         console.log('HDR texture loaded, processing...');
         texture.mapping = THREE.EquirectangularReflectionMapping;
