@@ -21,16 +21,29 @@ const material = new THREE.MeshMatcapMaterial();
 material.matcap = metcapTexture;
 
 // Environment map
+console.log('Starting to load HDR environment map...');
 const rgbeLoader = new RGBELoader()
 rgbeLoader.setDataType(THREE.HalfFloatType)
 rgbeLoader.setPath('/textures/environmentMap/')
-rgbeLoader.load('universe.hdr', (environmentMap) =>
-{
-    environmentMap.mapping = THREE.EquirectangularReflectionMapping
 
-    scene.background = environmentMap
-    scene.environment = environmentMap
-})
+rgbeLoader.load(
+    'universe.hdr',
+    (environmentMap) => {
+        console.log('HDR environment map loaded successfully');
+        environmentMap.mapping = THREE.EquirectangularReflectionMapping
+
+        scene.background = environmentMap
+        scene.environment = environmentMap
+    },
+    // Progress callback
+    (progress) => {
+        console.log(`Loading progress: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
+    },
+    // Error callback
+    (error) => {
+        console.error('Error loading HDR environment map:', error);
+    }
+)
 
 
 // 設定太空船的參數

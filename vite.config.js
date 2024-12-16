@@ -16,6 +16,12 @@ export default {
             output: {
                 manualChunks: {
                     three: ['three']
+                },
+                assetFileNames: (assetInfo) => {
+                    if (assetInfo.name.endsWith('.hdr')) {
+                        return 'textures/environmentMap/[name][extname]';
+                    }
+                    return 'assets/[name]-[hash][extname]';
                 }
             }
         },
