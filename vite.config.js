@@ -11,6 +11,7 @@ export default {
         sourcemap: true, // Add sourcemap
         minify: 'esbuild',
         target: 'esnext',
+        assetsDir: 'assets',
         rollupOptions: {
             output: {
                 manualChunks: {
@@ -21,5 +22,6 @@ export default {
     },
     optimizeDeps: {
         exclude: ['@esbuild/linux-x64']
-    }
+    },
+    assetsInclude: ['**/*.hdr']
 }

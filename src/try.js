@@ -8,9 +8,9 @@ const scene = new THREE.Scene();
 
 // Textures
 const textLoader = new THREE.TextureLoader();
-const metalColorTexture = textLoader.load('./textures/metal/metal.jpg');
-const metcapTexture = textLoader.load('./textures/matcaps/10.png');
-const gradientTexture = textLoader.load('./textures/gradients/3.jpg');
+const metalColorTexture = textLoader.load('/textures/metal/metal.jpg');
+const metcapTexture = textLoader.load('/textures/matcaps/10.png');
+const gradientTexture = textLoader.load('/textures/gradients/3.jpg');
 
 metalColorTexture.colorSpace = THREE.SRGBColorSpace;
 metcapTexture.colorSpace = THREE.SRGBColorSpace;
@@ -22,7 +22,7 @@ material.matcap = metcapTexture;
 
 // Environment map
 const rgbeLoader = new RGBELoader()
-rgbeLoader.load('./textures/environmentMap/universe.hdr', (environmentMap) =>
+rgbeLoader.load('/textures/environmentMap/universe.hdr', (environmentMap) =>
 {
     environmentMap.mapping = THREE.EquirectangularReflectionMapping
 
