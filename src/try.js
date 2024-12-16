@@ -22,7 +22,9 @@ material.matcap = metcapTexture;
 
 // Environment map
 const rgbeLoader = new RGBELoader()
-rgbeLoader.load('/textures/environmentMap/universe.hdr', (environmentMap) =>
+rgbeLoader.setDataType(THREE.HalfFloatType)
+rgbeLoader.setPath('/textures/environmentMap/')
+rgbeLoader.load('universe.hdr', (environmentMap) =>
 {
     environmentMap.mapping = THREE.EquirectangularReflectionMapping
 

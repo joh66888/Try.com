@@ -18,10 +18,17 @@ export default {
                     three: ['three']
                 }
             }
-        }
+        },
+        assetsInlineLimit: 0 // Never inline assets
     },
     optimizeDeps: {
         exclude: ['@esbuild/linux-x64']
     },
-    assetsInclude: ['**/*.hdr']
+    assetsInclude: ['**/*.hdr'],
+    // Configure asset handling
+    resolve: {
+        alias: {
+            '/textures': '/static/textures'
+        }
+    }
 }
