@@ -2,15 +2,25 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 
+// Canvas
+const canvas = document.querySelector('canvas.webgl')
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true
+})
+renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
 // scene
 const scene = new THREE.Scene();
 
-
 // Textures
 const textLoader = new THREE.TextureLoader();
-const metalColorTexture = textLoader.load('/textures/metal/metal.jpg');
-const metcapTexture = textLoader.load('/textures/matcaps/10.png');
-const gradientTexture = textLoader.load('/textures/gradients/3.jpg');
+const metalColorTexture = textLoader.load('./textures/metal/metal.jpg');
+const metcapTexture = textLoader.load('./textures/matcaps/10.png');
+const gradientTexture = textLoader.load('./textures/gradients/3.jpg');
 
 metalColorTexture.colorSpace = THREE.SRGBColorSpace;
 metcapTexture.colorSpace = THREE.SRGBColorSpace;
@@ -22,29 +32,36 @@ material.matcap = metcapTexture;
 
 // Environment map
 console.log('Starting to load HDR environment map...');
-const rgbeLoader = new RGBELoader()
-rgbeLoader.setDataType(THREE.HalfFloatType)
-rgbeLoader.setPath('/textures/environmentMap/')
+const rgbeLoader = new RGBELoader();
 
+// Create a new PMREMGenerator
+const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+
+// Load the HDR environment map
 rgbeLoader.load(
-    'universe.hdr',
-    (environmentMap) => {
-        console.log('HDR environment map loaded successfully');
-        environmentMap.mapping = THREE.EquirectangularReflectionMapping
-
-        scene.background = environmentMap
-        scene.environment = environmentMap
+    './textures/environmentMap/universe.hdr',
+    function(texture) {
+        console.log('HDR texture loaded, processing...');
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        
+        const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+        
+        scene.background = envMap;
+        scene.environment = envMap;
+        
+        texture.dispose();
+        pmremGenerator.dispose();
+        
+        console.log('Environment map setup complete');
     },
-    // Progress callback
-    (progress) => {
+    function(progress) {
         console.log(`Loading progress: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
     },
-    // Error callback
-    (error) => {
+    function(error) {
         console.error('Error loading HDR environment map:', error);
     }
-)
-
+);
 
 // 設定太空船的參數
 const radius = 100;
@@ -75,10 +92,6 @@ const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 // 記錄上一次呼叫 updateCube 的時間
 let lastUpdateTime = 0;
 
-// Canvas
-const canvas = document.querySelector('canvas.webgl')
-
-
 // Axes helper
 // const axesHelper = new THREE.AxesHelper(100000);
 // scene.add(axesHelper);
@@ -91,10 +104,6 @@ scene.add(camera);
 // 創建控制器 -> smooth by enableDamping
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-
-// 創建渲染器
-const renderer = new THREE.WebGLRenderer({ canvas });
-renderer.setSize(window.innerWidth, window.innerHeight);
 
 // 建立太空船陣列
 const spaceship = new THREE.Group();
@@ -152,8 +161,6 @@ function animate() {
     // Transform spaceship
     const time = clock.getElapsedTime();
     spaceship.rotation.y = time / 3;
-
-    console.log(time);
 
     // Render
     renderer.render(scene, camera);
