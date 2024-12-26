@@ -1,0 +1,46 @@
+body { 
+    margin: 0; 
+    overflow: hidden;
+}
+canvas { 
+    display: block; 
+    pointer-events: auto; /* 確保 canvas 能接受滑鼠事件 */
+}
+
+.loading-bar {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #ffffff;
+    transform: scaleX(0);
+    transform-origin: top left;
+    transition: transform 0.5s;
+    will-change: transform;
+}
+
+.loading-bar.ended {
+    transform-origin: top right;
+    transition: transform 1.5s ease-in-out;
+}
+
+.loading-text {
+    position: absolute;
+    bottom: 0; /* 文字置於螢幕底部 */
+    right: 0; /* 文字靠螢幕右側 */
+    padding: 36px; /* 設定內距 */
+    color: rgb(255, 255, 255); /* 白色文字 */
+    font-family: "Aeonik", sans-serif;
+    font-size: 98.08px; /* 調整字體大小 */
+    font-style: normal;
+    font-weight: 400;
+    text-align: right; /* 文字靠右對齊 */
+    line-height: 1.2; /* 行距調整 */
+    user-select: none; /* 禁止文字選取 */
+    white-space: nowrap; /* 防止文字自動換行 */
+}
+
+.loading-text.ended {
+    top: 70%;
+    transition: top 0.5s ease-in-out;
+}
