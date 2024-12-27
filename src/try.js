@@ -1,33 +1,15 @@
 import * as THREE from 'three'
-import { Wireframe } from 'three/examples/jsm/Addons.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
-import { uniform } from 'three/examples/jsm/nodes/Nodes.js';
 import { PMREMGenerator } from 'three/src/extras/PMREMGenerator.js';
-import { vertex } from 'three/src/renderers/shaders/ShaderLib/background.glsl.js';
+import { updateLoadingText } from './loading-text-animation.js'; 
+
+import { gsap } from 'gsap';
 
 // Loaders
 const loadingbar = document.querySelector('.loading-bar');
 const loadingtext = document.querySelector('.loading-text');
-
-const loadingManager = new THREE.LoadingManager(
-    // 全部資源加載完成時觸發
-    () => {
-        console.log('All resources loaded');
-    },
-    // 資源進度變化時觸發
-    (url, loaded, total) => {
-        console.log(`Resource loaded: ${url}`);
-        console.log(`Loading progress: ${(loaded / total * 100).toFixed(2)}%`);
-    },
-    // 資源加載失敗時觸發
-    (error) => {
-        console.error('Error loading resource:', error);
-    }
-);
-const rgbeLoader = new RGBELoader(loadingManager);
-
-import { gsap } from 'gsap';
+const rgbeLoader = new RGBELoader();
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -35,7 +17,7 @@ const canvas = document.querySelector('canvas.webgl')
 // Scene
 const scene = new THREE.Scene();
 
-// Overlay
+// Overlay Shader
 const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1);
 const overlayMaterial = new THREE.ShaderMaterial({
     transparent: true,
@@ -74,18 +56,12 @@ window.addEventListener("resize", () => {
 
 // Textures
 const textLoader = new THREE.TextureLoader();
-const metalColorTexture = textLoader.load('./textures/metal/metal.jpg');
 const metcapTexture = textLoader.load('./textures/matcaps/10.png');
-const gradientTexture = textLoader.load('./textures/gradients/3.jpg');
-
-metalColorTexture.colorSpace = THREE.SRGBColorSpace;
 metcapTexture.colorSpace = THREE.SRGBColorSpace;
-gradientTexture.colorSpace = THREE.SRGBColorSpace;
 
 // Material
 const material = new THREE.MeshMatcapMaterial();
 material.matcap = metcapTexture;
-
 
 // Load the HDR environment map
 // Create a new PMREMGenerator
@@ -103,6 +79,8 @@ rgbeLoader.load(
     (texture) => {
         // 下載進度
         const progressRatio = texture.loaded / texture.total;
+        console.log("loaded progressRatio: "+progressRatio);
+
         gsap.delayedCall(0.5, () => {
             const downloadEndTime = performance.now();
             console.log(`HDR environment map download complete in ${(downloadEndTime - startTime).toFixed(2)}ms`);
@@ -127,11 +105,7 @@ rgbeLoader.load(
             // 更新 loading bar: remove loading bar transform style & add ended class
             loadingbar.classList.add('ended');
             loadingbar.style.transform = ``;
-
-            // 更新 loading text: remove loading text
-            loadingtext.classList.add('ended');
-            loadingtext.innerHTML = ``;
-
+      
             // 動畫完成 overlay 消失
             gsap.to(overlayMaterial.uniforms.uAlpha, { duration: 3, value: 0 });
         });
@@ -139,15 +113,13 @@ rgbeLoader.load(
     (xhr) => {
         // 下載進度
         const progressRatio = xhr.loaded / xhr.total;
-
-        // 顯示下載進度
-        console.log(`HDR environment map downloading:  ${(progressRatio * 100).toFixed(2)}%`);
+        console.log("progressing progressRatio: "+progressRatio);
 
         // 更新 loading bar
         loadingbar.style.transform = `scaleX(${progressRatio})`;
-
-        // 更新 loading text
-        loadingtext.innerHTML = `${(progressRatio * 100).toFixed(0).padStart(3, '0')}`;
+        
+        // 使用 GSAP 更新 loading text
+        updateLoadingText(progressRatio, loadingtext);
     },
     (error) => {
         // 加載失敗
@@ -186,13 +158,6 @@ const spaceship = new THREE.Group();
 spaceship.position.set(0, spaceship_y, 0);
 scene.add(spaceship);
 
-// 記錄上一次呼叫 updateCube 的時間
-let lastUpdateTime = 0;
-
-// Axes helper
-// const axesHelper = new THREE.AxesHelper(100000);
-// scene.add(axesHelper);
-
 // camera
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
 camera.position.set(0, 200, 100)
@@ -219,9 +184,10 @@ function updateCubes(spaceship, radius) {
         // 設定朝向太空船中心
         cube.lookAt(0, spaceship_y, 0);
     })
-    console.log("complete reset coordinate")
 }
 
+// 記錄上一次呼叫 updateCube 的時間
+let lastUpdateTime = 0;
 const clock = new THREE.Clock()
 
 function animate() {

@@ -41,7 +41,7 @@ canvas {
 }
 
 .loading-text.ended {
-    top: 70%;
+    display: none;
     transition: top 0.5s ease-in-out;
 }
 
